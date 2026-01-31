@@ -1,0 +1,33 @@
+services:
+  mongo:
+    image: mongo:4.4
+    container_name: meteo-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build: ./backend
+    container_name: meteo-backend
+    restart: unless-stopped
+    environment:
+      - MONGO_URL=mongodb://mongo:27017
+      - MONGO_DB=meteo
+    depends_on:
+      - mongo
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    container_name: meteo-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+
+volumes:
+  mongo_data:
