@@ -15,6 +15,9 @@ services:
     environment:
       - MONGO_URL=mongodb://mongo:27017
       - MONGO_DB=meteo
+      - APP_USER=meteo
+      - APP_PASS=aXmeteo78@D!
+      - JWT_SECRET=a7f9e3c1b4d82f6e9c0a5d7b8e14f2c96a3d0b5e7f4c1a9d286e0b7c5f43a8d19e6c2b0f7d5a4e9c8b136f20d7a5c49e81b3f6d2a0c7e5b9f14d86a3c
     depends_on:
       - mongo
     ports:

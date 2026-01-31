@@ -95,8 +95,12 @@
 import { ref } from "vue";
 import { listDays, type ObservationDay } from "../api";
 
-defineEmits<{ (e: "open", date: string): void }>();
 defineExpose({ reload });
+
+const emit = defineEmits<{
+  (e: "open", date: string): void;
+  (e: "unauthorized"): void;
+}>();
 
 const today = new Date().toISOString().slice(0, 10);
 const from = ref(today.slice(0, 8) + "01"); // первое число месяца
@@ -110,6 +114,11 @@ async function reload() {
     rows.value = await listDays(from.value, to.value);
     status.value = `Готово: ${rows.value.length}`;
   } catch (e: any) {
+    if (e.message === "UNAUTHORIZED") {
+      status.value = "Нужна авторизация";
+      emit("unauthorized");   // 👈 сообщаем App
+      return;
+    }    
     status.value = "Ошибка: " + e.message;
   }
 }
