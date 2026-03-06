@@ -6,6 +6,11 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+
+    allowedHosts: [
+      "weather.mikhailburilov.com"
+    ],
+
     proxy: {
       "/api": "http://backend:8000"
     }

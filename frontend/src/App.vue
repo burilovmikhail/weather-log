@@ -12,6 +12,7 @@
         </div>
         <button @click="load">Загрузить</button>
         <button @click="save" :disabled="!day">Сохранить</button>
+        <button @click="sync" :disabled="syncing">Синхронизировать</button>
         <span v-if="status" style="opacity:.8">{{ status }}</span>
       </section>
 
@@ -29,7 +30,7 @@ import DayEditor from "./components/DayEditor.vue";
 import ObservationsTable from "./components/ObservationsTable.vue";
 import LoginBox from "./components/LoginBox.vue";
 import { clearToken } from "./api";
-import { getDay, putDay, type ObservationDay } from "./api";
+import { getDay, putDay, syncDays, type ObservationDay } from "./api";
 
 const tableRef = ref<InstanceType<typeof ObservationsTable> | null>(null);
 
@@ -37,6 +38,7 @@ const needAuth = ref(!localStorage.getItem("meteo_token"));
 const date = ref(new Date().toISOString().slice(0, 10));
 const day = ref<ObservationDay | null>(null);
 const status = ref("");
+const syncing = ref(false);
 
 async function onLoggedIn() {
   needAuth.value = false;
@@ -82,6 +84,30 @@ async function save() {
       return;
     }
     status.value = "Ошибка: " + e.message;
+  }
+}
+
+async function sync() {
+  syncing.value = true;
+  status.value = "Синхронизация...";
+  try {
+    const result = await syncDays();
+    const parts: string[] = [];
+    if (result.synced.length) parts.push(`добавлено: ${result.synced.length}`);
+    if (result.skipped.length) parts.push(`пропущено: ${result.skipped.length}`);
+    const errCount = Object.keys(result.errors).length;
+    if (errCount) parts.push(`ошибок: ${errCount}`);
+    status.value = parts.length ? parts.join(", ") : "Нет новых дней";
+    await tableRef.value?.reload();
+  } catch (e: any) {
+    if (e.message === "UNAUTHORIZED") {
+      needAuth.value = true;
+      status.value = "Нужна авторизация";
+      return;
+    }
+    status.value = "Ошибка: " + e.message;
+  } finally {
+    syncing.value = false;
   }
 }
 

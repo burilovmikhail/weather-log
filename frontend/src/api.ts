@@ -60,8 +60,15 @@ export async function login(username: string, password: string): Promise<void> {
 }
 
 export async function getDay(date: string): Promise<ObservationDay | null> {
-  const r = await apiFetch(`/api/observations/${date}`);
+  const r = await fetch(`/api/observations/${date}`, {
+    headers: {
+      ...authHeader(),
+    },
+  });
+
+  if (r.status === 401) throw new Error("UNAUTHORIZED");
   if (r.status === 404) return null;
+
   if (!r.ok) throw new Error(await r.text());
   return r.json();
 }
@@ -73,6 +80,17 @@ export async function putDay(day: ObservationDay): Promise<ObservationDay> {
     body: JSON.stringify(day)
   });
   if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+export type SyncResponse = {
+  synced: string[];
+  skipped: string[];
+  errors: Record<string, string>;
+};
+
+export async function syncDays(): Promise<SyncResponse> {
+  const r = await apiFetch("/api/sync", { method: "POST" });
   return r.json();
 }
 
